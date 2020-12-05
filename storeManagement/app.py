@@ -117,67 +117,6 @@ def index():
             "p_date": "---",
             "pgamt": 5678,
             "state": "未完成"
-        },
-        {
-            "pno": "D10830155",
-            "suno": "S23317790",
-            "sno": "Y1187",
-            "setup_date": "2020.11.30",
-            "p_date": "---",
-            "pgamt": 5678,
-            "state":"未完成"
-        },  {
-            "pno": "D10830155",
-            "suno": "S23317790",
-            "sno": "Y1187",
-            "setup_date": "2020.11.30",
-            "p_date": "---",
-            "pgamt": 5678,
-            "state":"已完成"
-        },
-        {
-            "pno": "D10830155",
-            "suno": "S23317790",
-            "sno": "Y1187",
-            "setup_date": "2020.11.30",
-            "p_date": "---",
-            "pgamt": 5678,
-            "state": "未完成"
-        },
-        {
-            "pno": "D10830155",
-            "suno": "S23317790",
-            "sno": "Y1187",
-            "setup_date": "2020.11.30",
-            "p_date": "---",
-            "pgamt": 5678,
-            "state":"未完成"
-        },  {
-            "pno": "D10830155",
-            "suno": "S23317790",
-            "sno": "Y1187",
-            "setup_date": "2020.11.30",
-            "p_date": "---",
-            "pgamt": 5678,
-            "state":"已完成"
-        },
-        {
-            "pno": "D10830155",
-            "suno": "S23317790",
-            "sno": "Y1187",
-            "setup_date": "2020.11.30",
-            "p_date": "---",
-            "pgamt": 5678,
-            "state": "未完成"
-        },
-        {
-            "pno": "D10830155",
-            "suno": "S23317790",
-            "sno": "Y1187",
-            "setup_date": "2020.11.30",
-            "p_date": "---",
-            "pgamt": 5678,
-            "state":"未完成"
         }
     ]
     return jsonify(my_list)
@@ -254,6 +193,9 @@ def purchase():
     elif request.method == 'GET':
         return render_template("purchase.html")
 
+# purchase进货功能模块：未完成的进货订单增加新的商品
+# 前端发送商品编号gno
+# 后端：返回该商品的详细信息
 @app.route("/add_detail",methods=['POST', 'GET'])
 def addDetail():
     a = "伊利牛奶"
@@ -325,6 +267,60 @@ def purchaseDetail():
                ]
     if request.method == 'POST':
         return jsonify(good_list)
+
+# purchase进货功能模块：将进货订单修改为进货状态时触发
+# 前端发送进货订单号pno 商品数组good_list 进货员编号sno
+# 后端：更新商品数组，将状态改为已完成，返回新的进货订单信息
+@app.route("/confirmFinish",methods=['POST', 'GET'])
+def confirmFinish():
+    pOrder_list = [
+        {
+            "pno": "D10830155",
+            "suno": "S23317790",
+            "sno": "Y1187",
+            "setup_date": "2020.11.30",
+            "p_date": "---",
+            "pgamt": 5678,
+            "state": "已完成"
+        },
+        {
+            "pno": "D10830155",
+            "suno": "S23317790",
+            "sno": "Y1187",
+            "setup_date": "2020.11.30",
+            "p_date": "---",
+            "pgamt": 5678,
+            "state": "已完成"
+        },
+        {
+            "pno": "D10830155",
+            "suno": "S23317790",
+            "sno": "Y1187",
+            "setup_date": "2020.11.30",
+            "p_date": "---",
+            "pgamt": 5678,
+            "state": "未完成"
+        }, {
+            "pno": "D10830155",
+            "suno": "S23317790",
+            "sno": "Y1187",
+            "setup_date": "2020.11.30",
+            "p_date": "---",
+            "pgamt": 5678,
+            "state": "已完成"
+        },
+        {
+            "pno": "D10830155",
+            "suno": "S23317790",
+            "sno": "Y1187",
+            "setup_date": "2020.11.30",
+            "p_date": "---",
+            "pgamt": 5678,
+            "state": "未完成"
+        }]
+    if request.method == 'POST':
+        print(request.get_json()['pno']!='')
+        return jsonify(pOrder_list)
 
 if __name__ == '__main__':
     app.run(
