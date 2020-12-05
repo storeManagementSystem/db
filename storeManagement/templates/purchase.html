@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../static/css/sell.css">
+    <script src="https://cdn.staticfile.org/vue/2.2.2/vue.min.js"></script>
+    <script src="http://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <title>Purchase</title>
+</head>
+<body>
+<form  action="" method="post" id="app">
+    <div class="container">
+        <div class="ui_content">
+            <div class="text_indent">
+                <div class="box_border">
+                    <div class="box_top">搜索</div>
+                    <div class="box_center">
+                        <span class="box_center_text2">订单编号：</span>
+                        <input type="text"  class="ui_input_txt02"  ref='pno_input' id="pno_input" v-model="pno_input" @blur="change_other"/>
+                        <span class="box_center_text2" > 供应商编号：</span>
+                        <input type="text"  class="ui_input_txt02"  ref='suno_input' id="suno_input" v-model="suno_input"/>
+                        <span class="box_center_text2">状态</span>
+                        <select  class="ui_select01"  ref='state_select' id="state_select" v-model="selected">
+                            <option value="" >--请选择--</option>
+                            <option value="0">未完成</option>
+                            <option value="1">已完成</option>
+                        </select>
+                        &emsp;&emsp;&emsp;
+                        <input type="button" value="查询" @click="post_query" class="box_btn1" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="ui_content">
+            <div class="ui_tb">
+                <table class="table" cellspacing="0" cellpadding="0" width="100%" align="center" border="0">
+                   <thead>
+                        <tr>
+                            <th>订单编号</th>
+                            <th>供应商编号</th>
+                            <th>员工编号</th>
+                            <th>创建日期</th>
+                            <th>进货日期</th>
+                            <th>总金额</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                     </thead>
+                    <tr v-for="(rec,index) in my_list" :key="index">
+                        <td>[[ rec.pno ]]</td>
+                        <td>[[ rec.suno ]]</td>
+                        <td>[[ rec.sno ]]</td>
+                        <td>[[ rec.setup_date ]]</td>
+                        <td>[[ rec.p_date ]]</td>
+                        <td><span>¥</span>
+                            <span>[[ rec.pgamt ]]</span>
+                        </td>
+                        <td>[[ rec.state ]]</td>
+                        <td>
+                            <a href="" @click.prevent="purchaseDetail(index)" class="edit">查看</a>
+                        </td>
+                    </tr>
+
+
+                </table>
+            </div>
+            <div class="ui_tb_h30">
+               <el-pagination
+                  background
+                  layout="prev, pager, next"
+                  :total="my_list.length">
+               </el-pagination>
+
+                    <el-dialog title="订单详情" :visible.sync="doneDialogVisible" width="95%">
+                        <div>
+                            <span style="padding-left: 20px;font-size: 20px">订单编号：</span><el-tag style="font-size: 15px">[[my_list[detail_index].pno]]</el-tag>
+                            <span style="padding-left: 20px;font-size: 20px">供应商编号：</span><el-tag style="font-size: 15px">[[my_list[detail_index].suno]]</el-tag>
+                            <span style="padding-left: 20px;font-size: 20px">创建日期：</span><el-tag style="font-size: 15px">[[my_list[detail_index].setup_date]]</el-tag>
+                            <span style="padding-left: 20px;font-size: 20px">完成日期：</span><el-tag style="font-size: 15px">[[my_list[detail_index].p_date]]</el-tag>
+                            <span style="padding-left: 20px;font-size: 20px">进货员：</span><el-tag style="font-size: 15px">[[my_list[detail_index].sno]]</el-tag>
+                            <span style="padding-left: 20px;font-size: 20px">状态：</span><el-tag style="font-size: 15px" type="success">[[my_list[detail_index].state]]</el-tag>
+                        </div>
+                        <br>
+                        <el-table
+                            :data="detail_tablelist"
+                            height="350"
+                            stripe
+                            border
+                            style="width: 100%">
+                            <el-table-column
+                              prop="gno"
+                              label="商品编号">
+                            </el-table-column>
+                            <el-table-column
+                              prop="gname"
+                              label="商品名称">
+                            </el-table-column>
+                            <el-table-column
+                              label="进价">
+                                <template slot-scope="scope">
+                                    <span>¥</span>
+                                    <span>[[scope.row.inprice]]</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                              label="数量">
+                                <template slot-scope="scope">
+                                    <el-input-number  v-model="scope.row.amount"  :min="1" :disabled="true" ></el-input-number>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                              label="总额">
+                                <template slot-scope="scope">
+                                    <span>¥</span>
+                                    <span>[[scope.row.inprice * scope.row.amount]]</span>
+                                </template>
+                            </el-table-column>
+                          </el-table>
+                      <div slot="footer" class="dialog-footer">
+                        <el-button type="primary" @click="doneDialogVisible = false">确 定</el-button>
+                      </div>
+                    </el-dialog>
+
+
+
+                <el-dialog title="订单详情" :visible.sync="toBeDoneDialogVisible" width="95%">
+                        <div>
+                            <span style="padding-left: 15px;font-size: 18px">订单编号：</span><el-tag style="font-size: 15px">[[my_list[detail_index].pno]]</el-tag>
+                            <span style="padding-left: 15px;font-size: 18px">供应商编号：</span><el-tag style="font-size: 15px">[[my_list[detail_index].suno]]</el-tag>
+                            <span style="padding-left: 15px;font-size: 18px">创建日期：</span><el-tag style="font-size: 15px">[[my_list[detail_index].setup_date]]</el-tag>
+                            <span style="padding-left: 15px;font-size: 18px">状态：</span><el-tag style="font-size: 15px" type="danger">[[my_list[detail_index].state]]</el-tag>
+                            <div style="float: right">
+                                <span style="padding-left: 15px;font-size: 18px">商品编号：</span>
+                                <el-input v-model="detail_add_gno" placeholder="请输入内容" style="width: 180px; padding-right: 5px"></el-input>
+                                <el-button type="primary" @click="addDetail">增加</el-button>
+                            </div>
+                        </div>
+                        <br>
+                        <el-table
+                            :data="detail_tablelist"
+                            height="350"
+                            stripe
+                            border
+                            style="width: 100%">
+                            <el-table-column
+                              prop="gno"
+                              label="商品编号">
+                            </el-table-column>
+                            <el-table-column
+                              prop="gname"
+                              label="商品名称">
+                            </el-table-column>
+                            <el-table-column
+                              label="进价">
+                                <template slot-scope="scope">
+                                    <span>¥</span>
+                                    <span>[[scope.row.inprice]]</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                              label="数量">
+                                <template slot-scope="scope">
+                                    <el-input-number  v-model="scope.row.amount"  :min="1"></el-input-number>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                              label="总额">
+                                <template slot-scope="scope">
+                                    <span>¥</span>
+                                    <span>[[scope.row.inprice * scope.row.amount]]</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                              label="操作">
+                                <template slot-scope="scope">
+                                    <el-button
+                                              size="mini"
+                                              type="danger"
+                                              @click="detailDelete(scope.$index)">删除</el-button>
+                                </template>
+                            </el-table-column>
+                          </el-table>
+                      <div slot="footer" class="dialog-footer">
+                          <el-button type="danger" @click="finishDetail" style="float: left">进 货 完 成</el-button>
+                          <el-button @click="toBeDoneDialogVisible = false">取 消</el-button>
+                        <el-button type="primary" @click="changeDetail">修 改</el-button>
+                      </div>
+                    </el-dialog>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+        var app=new Vue({
+            el:"#app",
+            data:{
+                my_list:[],
+                detail_tablelist :[],
+                selected: '',
+                pno_input: '',
+                suno_input: '',
+                detail_add_gno:'',
+                detail_index: 0,
+                doneDialogVisible: false,
+                toBeDoneDialogVisible: false,
+            },
+            delimiters:["[[","]]"],
+            mounted:function (){
+                this.fetchData()
+                console.log(this.isSelectedDis)
+            },
+            methods:{
+                fetchData(){
+                    this.$http.get("/api/purchase_all").then(rsp=>{
+                        this.my_list=rsp.body
+                        console.log(rsp.body)
+                    },err=>{console.log('Error')});
+                },
+                post_query(){
+                    //var pno= this.$refs.pno_input.value
+                    //var suno=this.$refs.suno_input.value
+                    console.log(this.pno_input)
+                    console.log(this.suno_input)
+                    console.log(this.selected)
+                    var data={pno:this.pno_input,suno:this.suno_input,state:this.selected}
+                    this.$http.post("/purchase",JSON.stringify(data),{emulateJSON:true}
+                    ).then(rsp=>{
+                        this.my_list=rsp.body
+                        console.log(rsp.body)
+                        },err=>{console.log('Error')});
+                },
+                change_other(){
+                    if (this.pno_input!=''){
+                        console.log('no input:'+pno_input)
+                        this.suno_input=''
+                        this.$refs.suno_input.setAttribute('disabled', 'disabled')
+                        this.selected=''
+                        document.querySelector('#state_select').setAttribute('disabled', 'disabled')
+                    }else {
+                        console.log('you can input!'+pno_input)
+                        this.$refs.suno_input.removeAttribute('disabled')
+                        document.querySelector('#state_select').removeAttribute('disabled', 'disabled')
+                    }
+                },
+                purchaseDetail(index){
+                    this.detail_index=index
+                    var pno = this.my_list[index]['pno']
+                    console.log(pno)
+                    var data={pno:pno}
+                    this.$http.post("/purchase_detail",JSON.stringify(data),{emulateJSON:true}
+                    ).then(rsp=>{
+                        this.detail_tablelist=rsp.body
+                        console.log(rsp.body)
+                        if (this.my_list[index]['state']=="已完成"){
+                            this.doneDialogVisible=true
+                        }else {
+                            this.toBeDoneDialogVisible=true
+                        }
+                        },err=>{console.log('Error')});
+                },
+                detailDelete(index) {
+                    console.log(index)
+                    this.detail_tablelist.splice(index,1)
+                },
+                addDetail(){
+                    var data={gno:this.detail_add_gno}
+                    this.$http.post("/add_detail",JSON.stringify(data),{emulateJSON:true}
+                    ).then(rsp=>{
+                         this.detail_tablelist.push(rsp.body)
+                        console.log(rsp.body)
+                        },err=>{console.log('Error')});
+                },
+                changeDetail(){
+                    this.toBeDoneDialogVisible = false
+                    var data={good_list:this.detail_tablelist,pno:this.detail_index}
+                    this.$http.post("/change_detail",JSON.stringify(data),{emulateJSON:true}
+                    ).then(rsp=>{
+                        console.log(rsp.body)
+                        },err=>{console.log('Error')});
+                },
+                finishDetail(){
+                    this.$confirm('请核对商品无误后再确认', '提示', {
+                        confirmButtonText: '确定',
+                      cancelButtonText: '取消',
+                      type: 'warning'
+                    }).then(() => {
+                      this.$message({
+                        type: 'success',
+                        message: '提交成功!',
+
+                      });
+                    }).catch(() => {
+                      this.$message({
+                        type: 'info',
+                        message: '已取消'
+                      });
+                    });
+                },
+                confirmFinish(){
+                    this.toBeDoneDialogVisible = false
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

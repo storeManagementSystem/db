@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../static/css/sell.css">
+    <script src="https://cdn.staticfile.org/vue/2.2.2/vue.min.js"></script>
+    <script src="http://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <title>Sell</title>
+</head>
+<body>
+<form  action="" method="post" id="app">
+    <div class="container">
+        <div class="content">
+            <div class="text_indent">
+                <div class="box_border">
+                    <div class="box_top">基本信息</div>
+                        <div class="box_center">
+                                <span class="box_center_text1">会员编号：</span>
+                                <input type="text"  class="ui_input_txt02" id="cno_input" v-model="cno_input"/>
+                                <input type="button" value="确认" class="box_btn1" @click="query_customer">
+                                <span class="box_center_text1" style="padding-left: 200px">商品编号：</span>
+                                <input type="text"  class="ui_input_txt02" id="addGood_btn" v-model="gno_input"/>
+                                <input type="button" value="增加" class="box_btn1" @click="add_good"/>
+                        </div>
+                </div>
+            </div>
+        </div>
+        <div class="content">
+            <div class="ui_tb">
+                <table class="table" cellspacing="0" cellpadding="0" width="100%" align="center" border="0">
+                    <thead>
+                        <tr>
+                            <th>商品编号</th>
+                            <th>商品名称</th>
+                            <th>单价</th>
+                            <th>数量</th>
+                            <th>总额</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(rec,index) in my_list" :key="index" >
+                            <td>[[ rec.gno ]]</td>
+                            <td>[[ rec.gname ]]</td>
+                            <td>
+                                <span>¥</span>
+                                <span>[[ rec.outprice ]]</span>
+                            </td>
+                            <td><div class="p-quantity" :id="forId(index)" :value="index">
+                                <input type="button" class="decrease" value="-" @click="decrease(index)">
+                                <input type="text" class="quantity" value="1" v-model="rec.amount" />
+                                <input type="button" class="increase" value="+" @click="rec.amount++">
+                            </div>
+                            </td>
+                            <td><span>¥</span>
+                                <span>[[ rec.outprice * rec.amount]]</span>
+                            </td>
+                             <td>
+                                 <a href="" @click.prevent="del(index)">删除</a>
+                             </td>
+                         </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="bottom_submit">
+                <form  method="post" action="submitOrder">
+                    <input type="button" value="提交订单" class="box_btn1" id="submit_orderBtn" @click="popDialog"/>
+                    <el-dialog title="提交订单" :visible.sync="dialogFormVisible">
+                      <el-form :model="form">
+                          <div>
+                              <span>目前可用积分：&emsp;[[ form.avaPoints ]]</span>
+                          </div>
+                          <div>
+                              <span>使用积分：&emsp;</span>
+                              <el-input v-model="form.pointsUsed" auto-complete="off" style="width: 50px"></el-input>
+                        </el-form-item>
+                          </div>
+                      </el-form>
+                      <div slot="footer" class="dialog-footer">
+                        <el-button @click="dialogFormVisible = false">取 消</el-button>
+                        <el-button type="primary" @click="submitOrder">确 定</el-button>
+                      </div>
+                    </el-dialog>
+
+                    <el-dialog title="提交结果" :visible.sync="dialogResultVisible">
+                      <span>[[ msg ]]</span>
+                          <span slot="footer" class="dialog-footer">
+                            <el-button type="primary" @click="reload">确 定</el-button>
+                          </span>
+                    </el-dialog>
+                </form>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+        var app=new Vue({
+            el:"#app",
+            data:{
+                my_list:[],
+                msg:'',
+                cno_input:'',
+                gno_input:'',
+                dialogFormVisible: false,
+                dialogResultVisible: false,
+                form: {
+                    avaPoints:0,
+                    pointsUsed: 0
+                }
+            },
+            delimiters:["[[","]]"],
+            mounted:function (){
+            },
+            methods:{
+                reload:function (){
+                    this.dialogResultVisible=false
+                    location.reload()
+                },
+                submitOrder:function (){
+                    var data={pointsUsed:this.form.pointsUsed,good_list:this.my_list}
+                    this.$http.post("/submitOrder",JSON.stringify(data),{emulateJSON:true}
+                    ).then(rsp=>{
+                        this.msg=rsp.body
+                        console.log(rsp.body)
+                        },err=>{console.log('Error')});
+                     this.dialogFormVisible = false
+                    this.dialogResultVisible = true
+                },
+                popDialog:function (){
+                    var data={cno:this.cno_input,good_list:this.my_list}
+                    this.$http.post("/queryPoints",JSON.stringify(data),{emulateJSON:true}
+                    ).then(rsp=>{
+                        this.form.avaPoints=rsp.body
+                        console.log(rsp.body)
+                        },err=>{console.log('Error')});
+                    this.dialogFormVisible = true
+                },
+                del:function (index){
+                    console.log("Deleteeeee!"+index)
+                    this.my_list.splice(index,1)
+                },
+                forId:function(index){
+				    return "forid_" +index
+			    },
+                decrease:function(index){
+                    if (this.my_list[index].amount>1){
+                      this.my_list[index].amount--;
+                    }
+                },
+                query_customer(){
+                    console.log(this.cno_input)
+                    var data={cno:this.cno_input}
+                    this.$http.post("/queryCustomer",JSON.stringify(data),{emulateJSON:true}
+                    ).then(rsp=>{
+                        this.msg=rsp.body
+                        console.log(typeof this.msg)
+                        if (this.msg =='Failed'){
+                            alert("该会员不存在")
+                        }else{
+                            alert("当前积分为："+this.msg)
+                        }
+                        },err=>{console.log('Error')});
+                },
+                add_good(){
+                    console.log(this.gno_input)
+                    var data={gno:this.gno_input}
+                    this.$http.post("/sell",JSON.stringify(data),{emulateJSON:true}
+                    ).then(rsp=>{
+                        //for (var obj in rsp.body){
+                        //    this.my_list.push(rsp.body[obj])
+                        //}
+                        this.my_list.push(rsp.body)
+                        console.log(this.my_list)
+                        },err=>{console.log('Error')});
+                }
+            }
+        });
+
+    </script>
+
+</body>
+</html>
